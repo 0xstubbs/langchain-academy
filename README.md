@@ -1,105 +1,301 @@
-![LangChain Academy](https://cdn.prod.website-files.com/65b8cd72835ceeacd4449a53/66e9eba1020525eea7873f96_LCA-big-green%20(2).svg)
+![LangChain Academy](https://cdn.prod.website-files.com/65b8cd72835ceeacd4449a53/66e9eba1020525e5a7873f96_LCA-big-green%20(2).svg)
 
-## Introduction
+# LangChain Academy — Emacs and uv edition
 
-Welcome to LangChain Academy, Introduction to LangGraph! 
-This is a growing set of modules focused on foundational concepts within the LangChain ecosystem. 
-Module 0 is basic setup and Modules 1 - 5 focus on building in LangGraph, progressively adding more advanced themes.  Module 6 addresses deploying your agents. 
-In each module folder, you'll see a set of notebooks. A link to the LangChain Academy lesson is at the top of each notebook to guide you through the topic. Each module also has a `studio` subdirectory, with a set of relevant graphs that we will explore using the LangGraph API and Studio.
+This fork adapts [LangChain Academy](https://github.com/langchain-ai/langchain-academy) to a personal Arch Linux workflow built around:
 
-## Setup
+- Python 3.13 managed by [uv](https://docs.astral.sh/uv/)
+- project-local environment variables managed by [direnv](https://direnv.net/)
+- Doom Emacs with Eglot, Org Babel, and `emacs-jupyter`
+- executable, stateful Org tutorials alongside the original Jupyter notebooks
+- LangGraph Studio launched from the same project environment
 
-### Python version
+The repository is an environment for coursework and executable writing; it is deliberately not an installable Python package.
 
-Make sure you're using Python version 3.11, 3.12, or 3.13.
-```
-python3 --version
-```
+## Academy overview
 
-### Clone repo
-```
-git clone https://github.com/langchain-ai/langchain-academy.git
-$ cd langchain-academy
-```
-Or, if you prefer, you can download a zip file [here](https://github.com/langchain-ai/langchain-academy/archive/refs/heads/main.zip).
+The academy introduces LangGraph and foundational concepts in the LangChain ecosystem. Module 0 covers setup, Modules 1–5 progressively develop LangGraph applications, and Module 6 covers deployment. Each module contains lesson notebooks; Modules 1–5 also contain a `studio/` directory with graphs for the LangGraph API and Studio.
 
-### Create an environment and install dependencies
-#### Mac/Linux/WSL
-```
-$ python3 -m venv lc-academy-env
-$ source lc-academy-env/bin/activate
-$ pip install -r requirements.txt
-```
-#### Windows Powershell
-```
-PS> python3 -m venv lc-academy-env
-PS> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-PS> .\lc-academy-env\Scripts\Activate.ps1
-PS> pip install -r requirements.txt
+## Machine assumptions
+
+These notes target the author's Arch Linux installation:
+
+- GNU Emacs 30.2
+- Doom Emacs 3.0.0-pre
+- Bash
+- Python 3.13
+- uv 0.12 or newer
+- direnv 2.37 or newer
+
+The pinned Python version lives in `.python-version`; exact Python dependencies live in `uv.lock`.
+
+## 1. Install system prerequisites
+
+```bash
+sudo pacman -S --needed git uv direnv
 ```
 
-### Running notebooks
-If you don't have Jupyter set up, follow the installation instructions [here](https://jupyter.org/install).
-```
-$ jupyter notebook
-```
+Enable direnv in Bash by adding this line to `~/.bashrc`:
 
-### Setting up env variables
-Briefly going over how to set up environment variables. 
-#### Mac/Linux/WSL
-```
-$ export API_ENV_VAR="your-api-key-here"
-```
-#### Windows Powershell
-```
-PS> $env:API_ENV_VAR = "your-api-key-here"
+```bash
+eval "$(direnv hook bash)"
 ```
 
-### Set OpenAI API key
-* If you don't have an OpenAI API key, you can sign up [here](https://openai.com/index/openai-api/).
-*  Set `OPENAI_API_KEY` in your environment 
+Open a new shell, or reload the current one:
 
-### Sign up and Set LangSmith API
-* Sign up for LangSmith [here](https://docs.langchain.com/langsmith/create-account-api-key#create-an-account-and-api-key), find out more about LangSmith and how to use it within your workflow [here](https://www.langchain.com/langsmith). 
-*  Set `LANGSMITH_API_KEY`, `LANGSMITH_TRACING_V2="true"` `LANGSMITH_PROJECT="langchain-academy"`in your environment 
-*  If you are on the EU instance also set `LANGSMITH_ENDPOINT`="https://eu.api.smith.langchain.com" as well.
-
-### Set up Tavily API for web search
-
-* Tavily Search API is a search engine optimized for LLMs and RAG, aimed at efficient, 
-quick, and persistent search results. 
-* You can sign up for an API key [here](https://tavily.com/). 
-It's easy to sign up and offers a very generous free tier. Some lessons (in Module 4) will use Tavily. 
-
-* Set `TAVILY_API_KEY` in your environment.
-
-### Set up Studio
-
-* Studio is a custom IDE for viewing and testing agents.
-* Studio can be run locally and opened in your browser on Mac, Windows, and Linux.
-* See documentation [here](https://docs.langchain.com/langsmith/studio#local-development-server) on the local Studio development server. 
-* Graphs for LangGraph Studio are in the `module-x/studio/` folders for module 1-5.
-* To start the local development server, make sure your virtual environment is active and run the following command in your terminal in the `/studio` directory in each module:
-
-```
-langgraph dev
+```bash
+source ~/.bashrc
 ```
 
-You should see the following output:
-```
-- 🚀 API: http://127.0.0.1:2024
-- 🎨 Studio UI: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
-- 📚 API Docs: http://127.0.0.1:2024/docs
+## 2. Clone this fork
+
+```bash
+git clone git@github.com:0xstubbs/langchain-academy.git
+cd langchain-academy
 ```
 
-Open your browser and navigate to the Studio UI: `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`.
+The remotes in an existing development clone should be:
 
-* To use Studio, you will need to create a .env file with the relevant API keys
-* Run this from the command line to create these files for module 1 to 5, as an example:
+```text
+origin    git@github.com:0xstubbs/langchain-academy.git
+upstream  git@github.com:langchain-ai/langchain-academy.git
 ```
-for i in {1..5}; do
-  cp module-$i/studio/.env.example module-$i/studio/.env
-  echo "OPENAI_API_KEY=\"$OPENAI_API_KEY\"" > module-$i/studio/.env
-done
-echo "TAVILY_API_KEY=\"$TAVILY_API_KEY\"" >> module-4/studio/.env
+
+To incorporate upstream changes later:
+
+```bash
+git fetch upstream
+git merge upstream/main
 ```
+
+## 3. Create the uv environment
+
+```bash
+uv sync
+```
+
+This creates `.venv/` and installs the locked dependencies. There is no separate `python -m venv`, `pip install`, or package activation step. Commands can always be run explicitly through uv:
+
+```bash
+uv run python --version
+uv run jupyter notebook
+uv run langgraph dev
+```
+
+The committed `pyproject.toml` only describes the shared environment. It has no build system, console script, or `src/` package because the academy itself is not installed into `.venv`.
+
+## 4. Configure project secrets with direnv
+
+Create one root secrets file:
+
+```bash
+cp .env.example .env
+$EDITOR .env
+```
+
+Populate the credentials required by the lessons:
+
+```dotenv
+OPENAI_API_KEY=...
+LANGSMITH_API_KEY=...
+LANGSMITH_TRACING_V2=true
+LANGSMITH_PROJECT=langchain-academy
+TAVILY_API_KEY=...
+```
+
+Both `.env` and `.venv/` are ignored by Git. Never commit real credentials.
+
+The committed `.envrc` performs two operations:
+
+```bash
+export VIRTUAL_ENV="$PWD/.venv"
+PATH_add "$VIRTUAL_ENV/bin"
+dotenv_if_exists .env
+```
+
+Review it and authorize it once:
+
+```bash
+direnv allow
+```
+
+Afterward, entering the repository or any child directory exposes the project interpreter and root environment variables. The module-specific `langgraph.json` files inherit this environment, so duplicated `module-X/studio/.env` files are unnecessary.
+
+Check the active environment with:
+
+```bash
+direnv status
+command -v python
+python --version
+```
+
+The interpreter should resolve to `langchain-academy/.venv/bin/python` and report Python 3.13.
+
+## 5. Configure Doom Emacs
+
+The private Doom configuration lives at `~/.config/doom/`. Enable these modules in `~/.config/doom/init.el`:
+
+```emacs-lisp
+:tools
+(lsp +eglot)
+direnv
+
+:lang
+(org
+ +agenda
+ +roam
+ +journal
+ +gnuplot
+ +graphviz
+ +pandoc
+ +jupyter
+ +noter
+ +present
+ +pretty
+ +hugo)
+(python +uv +lsp)
+```
+
+The flags serve different roles:
+
+- `+uv` selects the project uv environment in Python buffers.
+- `+lsp` enables Python language intelligence through the configured Eglot backend.
+- `direnv` propagates the directory environment into Emacs buffers, subprocesses, and Org source-block execution.
+- Org's `+jupyter` flag provides stateful Jupyter-backed Babel blocks and rich inline results.
+
+After changing `init.el`, synchronize Doom and restart Emacs:
+
+```bash
+~/.emacs.d/bin/doom sync
+```
+
+Register the clone as a Doom project:
+
+```text
+SPC p a    add a known project
+SPC p p    switch projects
+```
+
+Choose `~/langchain-academy/` when prompted.
+
+## 6. Register the project Jupyter kernel
+
+The uv environment contains IPython and `ipykernel`. Register it once so Emacs and Jupyter can identify it by a stable name:
+
+```bash
+uv run python -m ipykernel install --user \
+  --name langchain-academy \
+  --display-name "Python (langchain-academy)"
+```
+
+Verify discovery:
+
+```bash
+jupyter kernelspec list
+```
+
+If `.venv/` is deleted and recreated, repeat the kernelspec installation because the registered interpreter path may become stale.
+
+## 7. Write an executable Org tutorial
+
+Keep module-specific writing beside the material it explains, for example:
+
+```text
+module-1/
+├── langgraph-foundations.org
+├── tutorial-assets/
+├── studio/
+└── *.ipynb
+```
+
+Start an Org tutorial with document-wide Jupyter defaults:
+
+```org
+#+title: LangGraph Foundations
+#+PROPERTY: header-args:jupyter-python :session academy
+#+PROPERTY: header-args:jupyter-python+ :kernel langchain-academy
+#+PROPERTY: header-args:jupyter-python+ :async yes
+#+PROPERTY: header-args:jupyter-python+ :exports both
+#+PROPERTY: header-args:jupyter-python+ :results replace
+
+* Inspect the environment
+
+#+begin_src jupyter-python
+import sys
+print(sys.executable)
+print(sys.version)
+#+end_src
+
+* Preserve state between blocks
+
+#+begin_src jupyter-python
+values = [1, 2, 3, 4]
+squares = [value**2 for value in values]
+squares
+#+end_src
+
+#+begin_src jupyter-python
+sum(squares)
+#+end_src
+```
+
+Place point in a block and press `C-c C-c` to execute it. Blocks sharing `:session academy` use the same live kernel, so imports, variables, functions, and objects persist. Jupyter display values and plots are inserted as Org results.
+
+Before publishing, restart the kernel and execute the document from top to bottom:
+
+```text
+M-x jupyter-org-restart-kernel-execute-buffer
+```
+
+That catches hidden dependencies on interactive execution order—the notebook equivalent of “restart and run all.” With `:exports both`, Org exporters include both source code and saved results. Doom's `+hugo`, `+pandoc`, and `+present` flags support turning the same source into blog posts, tutorials, documents, or presentations.
+
+For deterministic publication assets, give important figures explicit paths beneath the module, such as `tutorial-assets/state-graph.png`.
+
+## 8. Run LangGraph Studio
+
+The Studio configurations for Modules 1–5 use Python 3.13 and inherit credentials from the root direnv environment. From a module's `studio/` directory:
+
+```bash
+cd module-1/studio
+uv run langgraph dev
+```
+
+The development server normally reports:
+
+```text
+- API: http://127.0.0.1:2024
+- Studio UI: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
+- API Docs: http://127.0.0.1:2024/docs
+```
+
+Generated `.langgraph_api/` state is ignored by Git.
+
+## 9. Original notebooks
+
+The original `.ipynb` notebooks remain usable:
+
+```bash
+uv run jupyter notebook
+```
+
+The Org/Jupyter workflow supplements rather than removes them. It provides a Git-friendly plain-text source for commentary-heavy experiments, tutorials, and publishable articles while retaining a stateful kernel and rich output.
+
+## API credentials
+
+- [OpenAI API keys](https://platform.openai.com/api-keys)
+- [LangSmith account and API key](https://docs.langchain.com/langsmith/create-account-api-key)
+- [Tavily API](https://tavily.com/)
+
+For the LangSmith EU instance, also set:
+
+```dotenv
+LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
+```
+
+## Upstream resources
+
+- [LangChain Academy](https://github.com/langchain-ai/langchain-academy)
+- [LangGraph documentation](https://docs.langchain.com/oss/python/langgraph/overview)
+- [LangGraph Studio](https://docs.langchain.com/oss/python/langgraph/studio)
+- [uv documentation](https://docs.astral.sh/uv/)
+- [Doom Emacs](https://github.com/doomemacs/doomemacs)
